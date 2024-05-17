@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Label Generator</title>
+    <style>
+        /* CSS styles here */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+        }
+
+        header {
+            background-color: #333;
+            color: #fff;
+            padding: 20px 0;
+            text-align: center;
+        }
+
+        main {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            margin-top: 20px;
+        }
+
+        #imageContainer {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        #TEST, #canvas {
+            border: 1px solid #ccc;
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+
+        #controls {
+            text-align: center;
+        }
+
+        input[type="number"], input[type="text"], button, select {
+            margin: 5px;
+            padding: 5px 10px;
+        }
+
+        footer {
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            padding: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Security Label Generator</h1>
+    </header>
+
+    <main>
+        <div id="imageContainer">
+            <img id="TEST" src="TEST.jpg" alt="TEST">
+            <canvas id="canvas"></canvas>
+        </div>
+
+        <div id="controls">
+            <label for="customText">LS Number:</label>
+            <input type="text" id="customText">
+            <select id="additionalImage">
+                <option value="">Sign</option>
+                <option value="kmi.jpg">KMI</option>
+                <option value="twojastara.png">Twoja Stara</option>
+                <option value="jg.jpg">JG</option>
+            </select>
+            <button id="generateButton">Generate Label</button>
+            <button id="downloadButton" style="display:none;">Download Label</button>
+        </div>
+    </main>
+
+    <footer>
+
+        <p>&copy; 2024 Security Label Generator</p>
+    </footer>
+
+    <script>
+        // JavaScript code here
+document.getElementById('generateButton').addEventListener('click', () => {
+    generateLabel();
+});
+
+function generateLabel() {
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const imageWidth = 450; // Szerokość etykiety
+    const imageHeight = 300; // Wysokość etykiety
+    const customText = document.getElementById('customText').value;
+    const today = new Date().toLocaleDateString('pl-PL');
+
+    canvas.width = imageWidth;
+    canvas.height = imageHeight;
+
+    const img = document.getElementById('TEST');
+    ctx.drawImage(img, 0, 0, imageWidth, imageHeight);
+
+    ctx.font = 'bold 15px Arial';
+    ctx.fillStyle = 'DarkSlateGray';
+    ctx.fillText(today, 50, 110); // Data na etykiecie (x: 10, y: 20)
+    ctx.fillText(customText, 128, 179); // Tekst wprowadzany ręcznie (x: 10, y: 50)
+
+    // Generowanie numeru seryjnego
+    const serialNumber = getSerialNumber();
+	ctx.fillStyle = 'IndianRed'; // Tutaj można zmienić kolor
+    ctx.fillText(`${serialNumber}`, 326, 80);
+
+    // Nałożenie dodatkowego obrazu
+    const additionalImageSrc = document.getElementById('additionalImage').value;
+    if (additionalImageSrc) {
+        const additionalImage = new Image();
+        additionalImage.src = additionalImageSrc;
+        additionalImage.onload = () => {
+            ctx.drawImage(additionalImage, 250, 220, 100, 70); // Pozycja i rozmiar dodatkowego obrazu
+            document.getElementById('downloadButton').style.display = 'inline';
+        };
+    } else {
+        document.getElementById('downloadButton').style.display = 'inline';
+    }
+}
+
+function getSerialNumber() {
+    let serialNumber = localStorage.getItem('serialNumber');
+    if (!serialNumber) {
+        serialNumber = 70000;
+    } else {
+        serialNumber = parseInt(serialNumber) + 1;
+    }
+    localStorage.setItem('serialNumber', serialNumber);
+    return serialNumber;
+}
+
+document.getElementById('downloadButton').addEventListener('click', () => {
+    downloadImage();
+});
+
+function downloadImage() {
+    const canvas = document.getElementById('canvas');
+    const link = document.createElement('a');
+    link.download = 'generated_image.jpg';
+    link.href = canvas.toDataURL('image/jpeg');
+    link.click();
+}
+    </script>
+</body>
+</html>
